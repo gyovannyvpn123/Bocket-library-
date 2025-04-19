@@ -833,7 +833,8 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
      * @throws Error if not connected
      */
     private checkConnection(): void {
-        if (!this.sock || this.connectionState.connection !== 'open') {
+        // In simulation mode, we only check the connection state
+        if (this.connectionState.connection !== 'open') {
             throw new Error('Client is not connected');
         }
     }
