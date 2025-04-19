@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - Bocket</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        pre {
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        code {
+            color: #e83e8c;
+        }
+        .method-signature {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-dark sidebar p-0">
+                <div class="d-flex flex-column p-3 text-white">
+                    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <span class="fs-4">Bocket</span>
+                    </a>
+                    <hr>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link text-white">
+                                Introduction
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/usage/" class="nav-link text-white">
+                                Usage
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/reference/" class="nav-link active">
+                                API Reference
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/events/" class="nav-link text-white">
+                                Events
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/types/" class="nav-link text-white">
+                                Types
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/auth/" class="nav-link text-white">
+                                Authentication
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 main-content p-4">
+                <h1>API Reference</h1>
+                <p class="lead">This page documents the primary methods available in the Bocket library.</p>
+                
+                <nav id="table-of-contents">
+                    <h2>Table of Contents</h2>
+                    <ul>
+                        <li><a href="#bocket-client">BocketClient</a></li>
+                        <li><a href="#connection-methods">Connection Methods</a></li>
+                        <li><a href="#messaging-methods">Messaging Methods</a></li>
+                        <li><a href="#group-methods">Group Methods</a></li>
+                        <li><a href="#contact-methods">Contact Methods</a></li>
+                        <li><a href="#media-methods">Media Methods</a></li>
+                        <li><a href="#utility-methods">Utility Methods</a></li>
+                    </ul>
+                </nav>
+
+                <hr>
+
+                <section id="bocket-client" class="mt-5">
+                    <h2>BocketClient</h2>
+                    <p>The primary class for interacting with the WhatsApp Web API.</p>
+                    
+                    <h3>Constructor</h3>
+                    <div class="method-signature">
+                        <code>new BocketClient(options: BocketOptions): BocketClient</code>
+                    </div>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>options</strong> (BocketOptions): Configuration options for the client</li>
+                    </ul>
+                    
+                    <h4>BocketOptions</h4>
+                    <ul>
+                        <li><strong>auth</strong> (AuthenticationState): Authentication state to restore a session</li>
+                        <li><strong>printQRInTerminal</strong> (boolean): Whether to print the QR code in the terminal</li>
+                        <li><strong>version</strong> (number[]): WhatsApp Web version to use</li>
+                        <li><strong>browser</strong> (WABrowserDescription): Browser description to use</li>
+                        <li><strong>connectTimeoutMs</strong> (number): Connection timeout in milliseconds</li>
+                        <li><strong>logger</strong> (Logger): Custom logger function</li>
+                        <li><strong>markOnlineOnConnect</strong> (boolean): Whether to mark as online on connection</li>
+                    </ul>
+                    
+                    <h4>Example</h4>
+                    <pre><code>import { BocketClient } from 'bocket'
+
+const bocket = new BocketClient({
+    printQRInTerminal: true,
+    browser: ['Bocket', 'Chrome', '1.0.0']
+})</code></pre>
+                </section>
+
+                <section id="connection-methods" class="mt-5">
+                    <h2>Connection Methods</h2>
+                    
+                    <h3>connect</h3>
+                    <div class="method-signature">
+                        <code>bocket.connect(): Promise&lt;void&gt;</code>
+                    </div>
+                    <p>Connect to the WhatsApp Web server.</p>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;void&gt;: Resolves when connected</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>await bocket.connect()</code></pre>
+                    
+                    <hr>
+                    
+                    <h3>logout</h3>
+                    <div class="method-signature">
+                        <code>bocket.logout(): Promise&lt;void&gt;</code>
+                    </div>
+                    <p>Logout from WhatsApp Web and end the session.</p>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;void&gt;: Resolves when logged out</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>await bocket.logout()</code></pre>
+                </section>
+
+                <section id="messaging-methods" class="mt-5">
+                    <h2>Messaging Methods</h2>
+                    
+                    <h3>sendMessage</h3>
+                    <div class="method-signature">
+                        <code>bocket.sendMessage(jid: string, content: AnyMessageContent, options?: MessageOptions): Promise&lt;WAMessage&gt;</code>
+                    </div>
+                    <p>Send a message to a chat.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>jid</strong> (string): The JID of the recipient</li>
+                        <li><strong>content</strong> (AnyMessageContent): The content of the message</li>
+                        <li><strong>options</strong> (MessageOptions, optional): Additional options for the message</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;WAMessage&gt;: The sent message</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>// Send text message
+await bocket.sendMessage('1234567890@s.whatsapp.net', { text: 'Hello!' })
+
+// Send message with reply
+await bocket.sendMessage(
+    '1234567890@s.whatsapp.net', 
+    { text: 'This is a reply' },
+    { quoted: previousMessage }
+)</code></pre>
+                    
+                    <hr>
+                    
+                    <h3>sendReadReceipt</h3>
+                    <div class="method-signature">
+                        <code>bocket.sendReadReceipt(jid: string, participant: string, messageIds: string[]): Promise&lt;void&gt;</code>
+                    </div>
+                    <p>Send a read receipt for messages.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>jid</strong> (string): The JID of the chat</li>
+                        <li><strong>participant</strong> (string): The participant JID (for groups)</li>
+                        <li><strong>messageIds</strong> (string[]): Array of message IDs to mark as read</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;void&gt;: Resolves when read receipts are sent</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>await bocket.sendReadReceipt(
+    '1234567890@s.whatsapp.net',
+    '1234567890@s.whatsapp.net',
+    ['MESSAGE_ID_1', 'MESSAGE_ID_2']
+)</code></pre>
+                    
+                    <hr>
+                    
+                    <h3>deleteMessage</h3>
+                    <div class="method-signature">
+                        <code>bocket.deleteMessage(jid: string, key: WAMessageKey, options?: DeleteMessageOptions): Promise&lt;void&gt;</code>
+                    </div>
+                    <p>Delete a message.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>jid</strong> (string): The JID of the chat</li>
+                        <li><strong>key</strong> (WAMessageKey): The key of the message to delete</li>
+                        <li><strong>options</strong> (DeleteMessageOptions, optional): Deletion options</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;void&gt;: Resolves when the message is deleted</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>await bocket.deleteMessage(
+    '1234567890@s.whatsapp.net',
+    {
+        id: 'MESSAGE_ID',
+        fromMe: true,
+        remoteJid: '1234567890@s.whatsapp.net'
+    }
+)</code></pre>
+                </section>
+
+                <section id="group-methods" class="mt-5">
+                    <h2>Group Methods</h2>
+                    
+                    <h3>groupCreate</h3>
+                    <div class="method-signature">
+                        <code>bocket.groupCreate(subject: string, participants: string[]): Promise&lt;WAGroupMetadata&gt;</code>
+                    </div>
+                    <p>Create a new WhatsApp group.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>subject</strong> (string): The name of the group</li>
+                        <li><strong>participants</strong> (string[]): Array of participant JIDs to add</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;WAGroupMetadata&gt;: Metadata of the created group</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>const group = await bocket.groupCreate(
+    'My Group',
+    ['1234567890@s.whatsapp.net', '9876543210@s.whatsapp.net']
+)
+console.log(`Group created with ID: ${group.id}`)</code></pre>
+                    
+                    <hr>
+                    
+                    <h3>groupUpdateSubject</h3>
+                    <div class="method-signature">
+                        <code>bocket.groupUpdateSubject(jid: string, subject: string): Promise&lt;void&gt;</code>
+                    </div>
+                    <p>Update the subject (name) of a group.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>jid</strong> (string): The JID of the group</li>
+                        <li><strong>subject</strong> (string): The new name for the group</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;void&gt;: Resolves when the subject is updated</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>await bocket.groupUpdateSubject('123456789@g.us', 'New Group Name')</code></pre>
+                    
+                    <hr>
+                    
+                    <h3>groupAddParticipants</h3>
+                    <div class="method-signature">
+                        <code>bocket.groupAddParticipants(jid: string, participants: string[]): Promise&lt;{[participant: string]: string}&gt;</code>
+                    </div>
+                    <p>Add participants to a group.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>jid</strong> (string): The JID of the group</li>
+                        <li><strong>participants</strong> (string[]): Array of participant JIDs to add</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;{[participant: string]: string}&gt;: Result status for each participant</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>await bocket.groupAddParticipants(
+    '123456789@g.us',
+    ['1234567890@s.whatsapp.net']
+)</code></pre>
+                </section>
+
+                <section id="contact-methods" class="mt-5">
+                    <h2>Contact Methods</h2>
+                    
+                    <h3>getContacts</h3>
+                    <div class="method-signature">
+                        <code>bocket.getContacts(): Promise&lt;WAContact[]&gt;</code>
+                    </div>
+                    <p>Get all contacts.</p>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;WAContact[]&gt;: Array of contacts</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>const contacts = await bocket.getContacts()
+console.log(`You have ${contacts.length} contacts`)</code></pre>
+                    
+                    <hr>
+                    
+                    <h3>getProfilePicture</h3>
+                    <div class="method-signature">
+                        <code>bocket.getProfilePicture(jid: string): Promise&lt;string&gt;</code>
+                    </div>
+                    <p>Get the profile picture URL of a user or group.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>jid</strong> (string): The JID of the user or group</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;string&gt;: The profile picture URL</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>const profilePic = await bocket.getProfilePicture('1234567890@s.whatsapp.net')
+console.log(`Profile picture URL: ${profilePic}`)</code></pre>
+                </section>
+
+                <section id="media-methods" class="mt-5">
+                    <h2>Media Methods</h2>
+                    
+                    <h3>downloadMediaMessage</h3>
+                    <div class="method-signature">
+                        <code>bocket.downloadMediaMessage(message: WAMessage, type?: 'buffer' | 'stream'): Promise&lt;Buffer | Stream&gt;</code>
+                    </div>
+                    <p>Download media from a message.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>message</strong> (WAMessage): The message containing media</li>
+                        <li><strong>type</strong> ('buffer' | 'stream', optional): The type of data to return</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;Buffer | Stream&gt;: The downloaded media</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>const media = await bocket.downloadMediaMessage(message)
+fs.writeFileSync('downloaded-media.jpg', media)</code></pre>
+                </section>
+
+                <section id="utility-methods" class="mt-5">
+                    <h2>Utility Methods</h2>
+                    
+                    <h3>updateStatus</h3>
+                    <div class="method-signature">
+                        <code>bocket.updateStatus(status: string): Promise&lt;boolean&gt;</code>
+                    </div>
+                    <p>Update your WhatsApp status.</p>
+                    
+                    <h4>Parameters</h4>
+                    <ul>
+                        <li><strong>status</strong> (string): The new status message</li>
+                    </ul>
+                    
+                    <h4>Returns</h4>
+                    <p>Promise&lt;boolean&gt;: Success status</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>await bocket.updateStatus('Hello from Bocket!')</code></pre>
+                    
+                    <hr>
+                    
+                    <h3>getConnectionState</h3>
+                    <div class="method-signature">
+                        <code>bocket.getConnectionState(): ConnectionState</code>
+                    </div>
+                    <p>Get the current connection state.</p>
+                    
+                    <h4>Returns</h4>
+                    <p>ConnectionState: The current connection state</p>
+                    
+                    <h4>Example</h4>
+                    <pre><code>const state = bocket.getConnectionState()
+console.log(`Current connection state: ${state.connection}`)</code></pre>
+                </section>
+
+                <div class="alert alert-info mt-5" role="alert">
+                    <h4 class="alert-heading">Note</h4>
+                    <p>This API reference is not exhaustive. For more detailed information about specific methods and their parameters, refer to the TypeScript definitions in the source code.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light p-3 text-center">
+        <div class="container">
+            <p class="mb-0">Bocket &copy; 2025. A WhatsApp Web API Library.</p>
+        </div>
+    </footer>
+</body>
+</html>

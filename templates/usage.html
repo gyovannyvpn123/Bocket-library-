@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage Guide - Bocket</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        pre {
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        code {
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-dark sidebar p-0">
+                <div class="d-flex flex-column p-3 text-white">
+                    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <span class="fs-4">Bocket</span>
+                    </a>
+                    <hr>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link text-white">
+                                Introduction
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/usage/" class="nav-link active">
+                                Usage
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/reference/" class="nav-link text-white">
+                                API Reference
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/events/" class="nav-link text-white">
+                                Events
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/types/" class="nav-link text-white">
+                                Types
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/auth/" class="nav-link text-white">
+                                Authentication
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 main-content p-4">
+                <h1>Usage Guide</h1>
+                <p class="lead">This guide covers how to use Bocket for common WhatsApp tasks.</p>
+                
+                <nav id="table-of-contents">
+                    <h2>Table of Contents</h2>
+                    <ul>
+                        <li><a href="#connecting">Connecting to WhatsApp</a></li>
+                        <li><a href="#sending-messages">Sending Messages</a></li>
+                        <li><a href="#receiving-messages">Receiving Messages</a></li>
+                        <li><a href="#sending-media">Sending Media</a></li>
+                        <li><a href="#groups">Working with Groups</a></li>
+                        <li><a href="#contacts">Managing Contacts</a></li>
+                        <li><a href="#status">Status Updates</a></li>
+                    </ul>
+                </nav>
+
+                <hr>
+
+                <section id="connecting" class="mt-5">
+                    <h2>Connecting to WhatsApp</h2>
+                    <p>To connect to WhatsApp, you need to create a new BocketClient instance and handle the connection state.</p>
+                    <pre><code>import { BocketClient, DisconnectReason } from 'bocket'
+import { Boom } from '@hapi/boom'
+
+async function connectToWhatsApp() {
+    const bocket = new BocketClient({
+        printQRInTerminal: true
+    })
+    
+    // Handle connection updates
+    bocket.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update
+        
+        if(connection === 'close') {
+            const shouldReconnect = (lastDisconnect.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut
+            console.log('connection closed due to ', lastDisconnect.error, ', reconnecting ', shouldReconnect)
+            
+            if(shouldReconnect) {
+                connectToWhatsApp()
+            }
+        } else if(connection === 'open') {
+            console.log('Connection opened!')
+        }
+    })
+    
+    return bocket
+}
+
+connectToWhatsApp()</code></pre>
+                    <p>When you run this code, you will see a QR code printed in the terminal. Scan this QR code with your WhatsApp mobile app to authenticate.</p>
+                </section>
+
+                <section id="sending-messages" class="mt-5">
+                    <h2>Sending Messages</h2>
+                    <p>Once connected, you can send messages to any WhatsApp user or group.</p>
+                    <pre><code>// Send a simple text message
+await bocket.sendMessage('1234567890@s.whatsapp.net', { text: 'Hello from Bocket!' })
+
+// Send a message with mentions
+await bocket.sendMessage('1234567890@s.whatsapp.net', { 
+    text: 'Hello @user!',
+    mentions: ['9876543210@s.whatsapp.net'] 
+})
+
+// Send a message with a caption and footer
+await bocket.sendMessage('1234567890@s.whatsapp.net', { 
+    text: 'Hello from Bocket!',
+    footer: 'Powered by Bocket'
+})</code></pre>
+                    <p>The first parameter is the JID (Jabber ID) of the recipient. For individual users, the format is <code>[phone_number]@s.whatsapp.net</code>, and for groups, it's <code>[group_id]@g.us</code>.</p>
+                </section>
+
+                <section id="receiving-messages" class="mt-5">
+                    <h2>Receiving Messages</h2>
+                    <p>To receive and handle messages, listen to the <code>messages.upsert</code> event.</p>
+                    <pre><code>bocket.on('messages.upsert', async ({ messages, type }) => {
+    if (type === 'notify') {
+        // Process each message
+        for (const message of messages) {
+            if (!message.key.fromMe) {
+                const senderJid = message.key.remoteJid
+                const messageContent = message.message
+                
+                // Handle text messages
+                if (messageContent?.conversation) {
+                    console.log(`Received from ${senderJid}: ${messageContent.conversation}`)
+                    
+                    // Reply to the message
+                    await bocket.sendMessage(senderJid, { 
+                        text: 'I received your message!' 
+                    }, { quoted: message })
+                }
+            }
+        }
+    }
+})</code></pre>
+                    <p>The <code>messages.upsert</code> event is triggered when new messages are received. The <code>type</code> field can be either <code>notify</code> (for new messages) or <code>append</code> (for history sync).</p>
+                </section>
+
+                <section id="sending-media" class="mt-5">
+                    <h2>Sending Media</h2>
+                    <p>Bocket supports sending various types of media, including images, videos, documents, and more.</p>
+                    
+                    <h3>Sending Images</h3>
+                    <pre><code>// Send an image from a URL
+await bocket.sendMessage('1234567890@s.whatsapp.net', {
+    image: { url: 'https://example.com/image.jpg' },
+    caption: 'Check out this image!'
+})
+
+// Send an image from a buffer
+const buffer = fs.readFileSync('path/to/image.jpg')
+await bocket.sendMessage('1234567890@s.whatsapp.net', {
+    image: buffer,
+    caption: 'Image from buffer'
+})</code></pre>
+
+                    <h3>Sending Videos</h3>
+                    <pre><code>// Send a video from a URL
+await bocket.sendMessage('1234567890@s.whatsapp.net', {
+    video: { url: 'https://example.com/video.mp4' },
+    caption: 'Check out this video!'
+})
+
+// Send a video from a buffer
+const buffer = fs.readFileSync('path/to/video.mp4')
+await bocket.sendMessage('1234567890@s.whatsapp.net', {
+    video: buffer,
+    caption: 'Video from buffer'
+})</code></pre>
+
+                    <h3>Sending Documents</h3>
+                    <pre><code>// Send a document from a URL
+await bocket.sendMessage('1234567890@s.whatsapp.net', {
+    document: { url: 'https://example.com/document.pdf' },
+    mimetype: 'application/pdf',
+    fileName: 'document.pdf'
+})
+
+// Send a document from a buffer
+const buffer = fs.readFileSync('path/to/document.pdf')
+await bocket.sendMessage('1234567890@s.whatsapp.net', {
+    document: buffer,
+    mimetype: 'application/pdf',
+    fileName: 'document.pdf'
+})</code></pre>
+                </section>
+
+                <section id="groups" class="mt-5">
+                    <h2>Working with Groups</h2>
+                    <p>Bocket provides methods for managing WhatsApp groups.</p>
+                    
+                    <h3>Creating a Group</h3>
+                    <pre><code>// Create a new group
+const result = await bocket.groupCreate('Group Name', ['1234567890@s.whatsapp.net', '9876543210@s.whatsapp.net'])
+const groupJid = result.id
+
+console.log(`Created group: ${groupJid}`)</code></pre>
+
+                    <h3>Adding Participants</h3>
+                    <pre><code>// Add participants to a group
+await bocket.groupAddParticipants('123456789@g.us', ['1234567890@s.whatsapp.net'])</code></pre>
+
+                    <h3>Removing Participants</h3>
+                    <pre><code>// Remove participants from a group
+await bocket.groupRemoveParticipants('123456789@g.us', ['1234567890@s.whatsapp.net'])</code></pre>
+
+                    <h3>Updating Group Settings</h3>
+                    <pre><code>// Update group subject (name)
+await bocket.groupUpdateSubject('123456789@g.us', 'New Group Name')
+
+// Update group description
+await bocket.groupUpdateDescription('123456789@g.us', 'This is a group for testing Bocket')</code></pre>
+                </section>
+
+                <section id="contacts" class="mt-5">
+                    <h2>Managing Contacts</h2>
+                    <p>You can retrieve and manage your WhatsApp contacts with Bocket.</p>
+                    
+                    <h3>Getting Contact List</h3>
+                    <pre><code>// Get all contacts
+const contacts = await bocket.getContacts()
+console.log(`You have ${contacts.length} contacts`)</code></pre>
+
+                    <h3>Getting Profile Pictures</h3>
+                    <pre><code>// Get a contact's profile picture
+const profilePic = await bocket.getProfilePicture('1234567890@s.whatsapp.net')
+console.log(`Profile picture URL: ${profilePic}`)</code></pre>
+                </section>
+
+                <section id="status" class="mt-5">
+                    <h2>Status Updates</h2>
+                    <p>You can update your own WhatsApp status using Bocket.</p>
+                    
+                    <h3>Setting Status Message</h3>
+                    <pre><code>// Update your status
+await bocket.updateStatus('Hello from Bocket!')</code></pre>
+                </section>
+
+                <div class="alert alert-info mt-5" role="alert">
+                    <h4 class="alert-heading">Need more help?</h4>
+                    <p>For more detailed information about Bocket's API, check out the <a href="/docs/reference/" class="alert-link">API Reference</a> section.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light p-3 text-center">
+        <div class="container">
+            <p class="mb-0">Bocket &copy; 2025. A WhatsApp Web API Library.</p>
+        </div>
+    </footer>
+</body>
+</html>

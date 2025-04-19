@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction - Bocket</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        pre {
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        code {
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-dark sidebar p-0">
+                <div class="d-flex flex-column p-3 text-white">
+                    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <span class="fs-4">Bocket</span>
+                    </a>
+                    <hr>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link active">
+                                Introduction
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/usage/" class="nav-link text-white">
+                                Usage
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/reference/" class="nav-link text-white">
+                                API Reference
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/events/" class="nav-link text-white">
+                                Events
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/types/" class="nav-link text-white">
+                                Types
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/auth/" class="nav-link text-white">
+                                Authentication
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 main-content p-4">
+                <h1>Introduction</h1>
+                <p class="lead">Bocket is a whatsapp library built on <a href="https://nodejs.org/en/">Node.js</a> that connects through the WhatsApp Web app.</p>
+                
+                <h2 class="mt-5">What is Bocket?</h2>
+                <p>Bocket is a WhatsApp Web API library implemented in TypeScript that allows you to create a WhatsApp bot and interact with the WhatsApp Web platform programmatically.</p>
+
+                <p>With Bocket, you can:</p>
+                <ul>
+                    <li>Send and receive messages</li>
+                    <li>Send media (images, videos, documents, etc.)</li>
+                    <li>Interact with groups (create groups, add/remove participants, etc.)</li>
+                    <li>Send message buttons</li>
+                    <li>Get message history and status updates</li>
+                    <li>More!</li>
+                </ul>
+
+                <h2 class="mt-5">Requirements</h2>
+                <ul>
+                    <li>Node.js v14 or higher</li>
+                    <li>A phone with WhatsApp installed for the initial QR code scanning</li>
+                </ul>
+
+                <h2 class="mt-5">Installation</h2>
+                <p>You can install Bocket using npm:</p>
+                <pre><code>npm install bocket</code></pre>
+
+                <h2 class="mt-5">Quick Start</h2>
+                <p>Here's a simple example to get you started:</p>
+                <pre><code>import { BocketClient, DisconnectReason } from 'bocket'
+import { useAuthState } from 'bocket/Auth'
+import { Boom } from '@hapi/boom'
+
+// the saved credentials
+const { state, saveState } = useAuthState('./auth_info_baileys.json')
+
+// start a connection
+const startBocket = async() => {
+    const bocket = new BocketClient({
+        // can provide additional config here
+        printQRInTerminal: true,
+        auth: state
+    })
+    
+    bocket.on('auth-state.update', saveState)
+    
+    bocket.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update
+        
+        if(connection === 'close') {
+            // reconnect if not loggedOut
+            const shouldReconnect = (lastDisconnect.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut
+            console.log('connection closed due to ', lastDisconnect.error, ', reconnecting ', shouldReconnect)
+            // reconnect if not logged out
+            if(shouldReconnect) {
+                startBocket()
+            }
+        } else if(connection === 'open') {
+            console.log('opened connection')
+        }
+    })
+    
+    bocket.on('messages.upsert', async m => {
+        console.log(JSON.stringify(m, undefined, 2))
+        
+        const msg = m.messages[0]
+        if(!msg.key.fromMe && m.type === 'notify') {
+            console.log('replying to', m.messages[0].key.remoteJid)
+            await bocket.sendMessage(msg.key.remoteJid, { text: 'Hello there!' })
+        }
+    })
+}
+
+// run in main file
+startBocket()</code></pre>
+
+                <h2 class="mt-5">Documention</h2>
+                <p>For more detailed documentation, check out the following sections:</p>
+                <ul>
+                    <li><a href="/docs/usage/">Usage Guide</a> - Learn how to use Bocket for common tasks</li>
+                    <li><a href="/docs/reference/">API Reference</a> - Detailed API documentation</li>
+                    <li><a href="/docs/events/">Events</a> - Information about the events Bocket emits</li>
+                    <li><a href="/docs/types/">Types</a> - TypeScript type definitions</li>
+                    <li><a href="/docs/auth/">Authentication</a> - Learn about authentication and session management</li>
+                </ul>
+
+                <h2 class="mt-5">License</h2>
+                <p>Bocket is licensed under the MIT License.</p>
+
+                <div class="alert alert-warning mt-5" role="alert">
+                    <h4 class="alert-heading">Important Notice!</h4>
+                    <p>This project is not affiliated, associated, authorized, endorsed by, or in any way officially connected with WhatsApp or any of its subsidiaries or its affiliates. The official WhatsApp website can be found at https://whatsapp.com. "WhatsApp" as well as related names, marks, emblems and images are registered trademarks of their respective owners.</p>
+                    <hr>
+                    <p class="mb-0">Using this library against WhatsApp's Terms of Service may result in your account being banned. Use at your own risk.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light p-3 text-center">
+        <div class="container">
+            <p class="mb-0">Bocket &copy; 2025. A WhatsApp Web API Library.</p>
+        </div>
+    </footer>
+</body>
+</html>

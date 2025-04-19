@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Types Reference - Bocket</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        pre {
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        code {
+            color: #e83e8c;
+        }
+        .type-card {
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-dark sidebar p-0">
+                <div class="d-flex flex-column p-3 text-white">
+                    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <span class="fs-4">Bocket</span>
+                    </a>
+                    <hr>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link text-white">
+                                Introduction
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/usage/" class="nav-link text-white">
+                                Usage
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/reference/" class="nav-link text-white">
+                                API Reference
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/events/" class="nav-link text-white">
+                                Events
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/types/" class="nav-link active">
+                                Types
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/auth/" class="nav-link text-white">
+                                Authentication
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 main-content p-4">
+                <h1>Types Reference</h1>
+                <p class="lead">This page documents the primary TypeScript types and interfaces used in the Bocket library.</p>
+                
+                <nav id="table-of-contents">
+                    <h2>Table of Contents</h2>
+                    <ul>
+                        <li><a href="#message-types">Message Types</a></li>
+                        <li><a href="#chat-types">Chat & Contact Types</a></li>
+                        <li><a href="#group-types">Group Types</a></li>
+                        <li><a href="#connection-types">Connection Types</a></li>
+                        <li><a href="#authentication-types">Authentication Types</a></li>
+                        <li><a href="#utility-types">Utility Types</a></li>
+                    </ul>
+                </nav>
+
+                <hr>
+
+                <section id="message-types" class="mt-5">
+                    <h2>Message Types</h2>
+                    
+                    <div class="type-card">
+                        <h3>WAMessage</h3>
+                        <p>Represents a WhatsApp message.</p>
+                        <pre><code>interface WAMessage {
+    key: WAMessageKey;
+    message: WAMessageContent;
+    messageTimestamp?: number;
+    status?: WAMessageStatus;
+    participant?: string; // for group messages
+    messageC2STimestamp?: number;
+    starred?: boolean;
+}</code></pre>
+                    </div>
+
+                    <div class="type-card">
+                        <h3>WAMessageKey</h3>
+                        <p>Uniquely identifies a message.</p>
+                        <pre><code>interface WAMessageKey {
+    remoteJid: string;
+    fromMe: boolean;
+    id: string;
+    participant?: string; // for group messages
+}</code></pre>
+                    </div>
+
+                    <div class="type-card">
+                        <h3>WAMessageContent</h3>
+                        <p>The content of a WhatsApp message.</p>
+                        <pre><code>interface WAMessageContent {
+    conversation?: string;
+    extendedTextMessage?: {
+        text: string;
+        contextInfo?: ContextInfo;
+        // other fields omitted for brevity
+    };
+    imageMessage?: {
+        url: string;
+        mimetype: string;
+        caption?: string;
+        // other fields omitted for brevity
+    };
+    videoMessage?: {
+        url: string;
+        mimetype: string;
+        caption?: string;
+        // other fields omitted for brevity
+    };
+    audioMessage?: {
+        url: string;
+        mimetype: string;
+        // other fields omitted for brevity
+    };
+    documentMessage?: {
+        url: string;
+        mimetype: string;
+        fileName: string;
+        // other fields omitted for brevity
+    };
+    // other message types omitted for brevity
+}</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>WAMessageStatus</h3>
+                        <p>The status of a message.</p>
+                        <pre><code>type WAMessageStatus = 'error' | 'pending' | 'server_ack' | 'delivery_ack' | 'read' | 'played';</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>AnyMessageContent</h3>
+                        <p>Content for any type of message that can be sent.</p>
+                        <pre><code>type AnyMessageContent = 
+    { text: string; mentions?: string[]; } | 
+    { image: Buffer | string; caption?: string; } | 
+    { video: Buffer | string; caption?: string; } | 
+    { audio: Buffer | string; } |
+    { document: Buffer | string; mimetype: string; fileName: string; } |
+    // other content types omitted for brevity
+    ;</code></pre>
+                    </div>
+                </section>
+
+                <section id="chat-types" class="mt-5">
+                    <h2>Chat & Contact Types</h2>
+                    
+                    <div class="type-card">
+                        <h3>WAChat</h3>
+                        <p>Represents a WhatsApp chat.</p>
+                        <pre><code>interface WAChat {
+    id: string;
+    name?: string;
+    unreadCount?: number;
+    timestamp?: number;
+    archived?: boolean;
+    pinned?: boolean;
+    mute?: number;
+    notSpam?: boolean;
+    // other fields omitted for brevity
+}</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>WAContact</h3>
+                        <p>Represents a WhatsApp contact.</p>
+                        <pre><code>interface WAContact {
+    id: string;
+    name?: string;
+    notify?: string;
+    verifiedName?: string;
+    imgUrl?: string;
+    status?: string;
+    // other fields omitted for brevity
+}</code></pre>
+                    </div>
+                </section>
+
+                <section id="group-types" class="mt-5">
+                    <h2>Group Types</h2>
+                    
+                    <div class="type-card">
+                        <h3>WAGroupMetadata</h3>
+                        <p>Metadata for a WhatsApp group.</p>
+                        <pre><code>interface WAGroupMetadata {
+    id: string;
+    subject: string;
+    creation: number;
+    owner?: string;
+    desc?: string;
+    participants: WAGroupParticipant[];
+    // other fields omitted for brevity
+}</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>WAGroupParticipant</h3>
+                        <p>A participant in a WhatsApp group.</p>
+                        <pre><code>interface WAGroupParticipant {
+    id: string;
+    isAdmin: boolean;
+    isSuperAdmin: boolean;
+}</code></pre>
+                    </div>
+                </section>
+
+                <section id="connection-types" class="mt-5">
+                    <h2>Connection Types</h2>
+                    
+                    <div class="type-card">
+                        <h3>ConnectionState</h3>
+                        <p>Represents the state of the connection.</p>
+                        <pre><code>interface ConnectionState {
+    connection: 'close' | 'connecting' | 'open';
+    lastDisconnect?: {
+        error: Error;
+        date: Date;
+    };
+    qr?: string;
+    receivedPendingNotifications?: boolean;
+    isNewLogin?: boolean;
+    // other fields omitted for brevity
+}</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>DisconnectReason</h3>
+                        <p>Enum of reasons why a connection might be closed.</p>
+                        <pre><code>enum DisconnectReason {
+    loggedOut = 401,
+    badSession = 500,
+    connectionClosed = 428,
+    connectionLost = 408,
+    connectionReplaced = 440,
+    timedOut = 408,
+    // other reasons omitted for brevity
+}</code></pre>
+                    </div>
+                </section>
+
+                <section id="authentication-types" class="mt-5">
+                    <h2>Authentication Types</h2>
+                    
+                    <div class="type-card">
+                        <h3>AuthenticationState</h3>
+                        <p>The state of authentication with WhatsApp Web.</p>
+                        <pre><code>interface AuthenticationState {
+    creds: AuthenticationCreds;
+    keys: SignalKeyStoreType;
+}</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>AuthenticationCreds</h3>
+                        <p>Credentials for WhatsApp Web authentication.</p>
+                        <pre><code>interface AuthenticationCreds {
+    noiseKey: KeyPair;
+    signedIdentityKey: KeyPair;
+    signedPreKey: SignedKeyPair;
+    registrationId: number;
+    advSecretKey: string;
+    nextPreKeyId: number;
+    firstUnuploadedPreKeyId: number;
+    serverHasPreKeys: boolean;
+    account: Account;
+    me: Contact;
+    signalIdentities: SignalIdentity[];
+    // other fields omitted for brevity
+}</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>SignalKeyStoreType</h3>
+                        <p>Storage for Signal protocol keys.</p>
+                        <pre><code>interface SignalKeyStoreType {
+    preKeys: {
+        [key: string]: KeyPair;
+    };
+    sessions: {
+        [key: string]: string;
+    };
+    senderKeys: {
+        [key: string]: string;
+    };
+    appStateSyncKeys: {
+        [key: string]: string;
+    };
+    appStateVersions: {
+        [key: string]: AppStateVersion;
+    };
+}</code></pre>
+                    </div>
+                </section>
+
+                <section id="utility-types" class="mt-5">
+                    <h2>Utility Types</h2>
+                    
+                    <div class="type-card">
+                        <h3>KeyPair</h3>
+                        <p>A public-private key pair.</p>
+                        <pre><code>interface KeyPair {
+    public: Uint8Array;
+    private: Uint8Array;
+}</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>SignedKeyPair</h3>
+                        <p>A key pair with a signature.</p>
+                        <pre><code>interface SignedKeyPair extends KeyPair {
+    keyId: number;
+    signature: Uint8Array;
+}</code></pre>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h3>WABrowserDescription</h3>
+                        <p>Browser description for WhatsApp Web.</p>
+                        <pre><code>type WABrowserDescription = [browserName: string, browserVersion: string, osVersion: string];</code></pre>
+                    </div>
+                </section>
+
+                <div class="alert alert-info mt-5" role="alert">
+                    <h4 class="alert-heading">Note</h4>
+                    <p>This types reference is not exhaustive. For the most up-to-date and complete type definitions, refer to the TypeScript definitions in the source code.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light p-3 text-center">
+        <div class="container">
+            <p class="mb-0">Bocket &copy; 2025. A WhatsApp Web API Library.</p>
+        </div>
+    </footer>
+</body>
+</html>

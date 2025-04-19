@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bocket - WhatsApp Web API Library for Node.js</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        pre {
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        code {
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-dark sidebar p-0">
+                <div class="d-flex flex-column p-3 text-white">
+                    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <span class="fs-4">Bocket</span>
+                    </a>
+                    <hr>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link active">
+                                Introduction
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/usage/" class="nav-link text-white">
+                                Usage
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/reference/" class="nav-link text-white">
+                                API Reference
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/events/" class="nav-link text-white">
+                                Events
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/types/" class="nav-link text-white">
+                                Types
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/auth/" class="nav-link text-white">
+                                Authentication
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 main-content p-4">
+                <h1>Bocket</h1>
+                <p class="lead">A WhatsApp Web API Library for Node.js that connects through the WhatsApp Web browser app</p>
+                
+                <div class="alert alert-info" role="alert">
+                    <strong>Note:</strong> This is a reimplementation of the Baileys WhatsApp Web API, with the same functionality but under a different name.
+                </div>
+
+                <h2 class="mt-5">Installation</h2>
+                <pre><code>npm install bocket</code></pre>
+
+                <h2 class="mt-5">Simple Example</h2>
+                <pre><code>import { BocketClient } from 'bocket'
+
+async function startBocket() {
+    const bocket = new BocketClient({
+        printQRInTerminal: true
+    })
+
+    bocket.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update
+        
+        if(connection === 'close') {
+            // reconnect if not logged out
+            if((lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut) {
+                startBocket()
+            }
+        } else if(connection === 'open') {
+            console.log('opened connection')
+        }
+    })
+
+    bocket.on('messages.upsert', m => {
+        console.log(JSON.stringify(m, undefined, 2))
+        
+        const msg = m.messages[0]
+        if(!msg.key.fromMe && m.type === 'notify') {
+            console.log('replying to', m.messages[0].key.remoteJid)
+            await bocket.sendMessage(msg.key.remoteJid, { text: 'Hello there!' })
+        }
+    })
+}
+
+// run in main file
+startBocket()</code></pre>
+
+                <h2 class="mt-5">Connect to WhatsApp</h2>
+                <p>Connecting is simple - it just requires you to run the following code with ES Modules:</p>
+                <pre><code>import { BocketClient } from 'bocket'
+
+async function connectToWhatsApp() {
+    const bocket = new BocketClient({
+        // can provide additional configuration here
+        printQRInTerminal: true
+    })
+    
+    bocket.on('connection.update', ({ connection }) => {
+        if(connection === 'open') {
+            console.log('connected!')
+        }
+    })
+    
+    // if you want to save the credentials in a file, uncomment this code
+    /*
+    const { state, saveState } = useAuthState('./auth_info.json')
+    const sock = new BocketClient({
+        printQRInTerminal: true,
+        auth: state
+    })
+    // will listen for updates to auth state and automatically save them
+    sock.on('auth-state.update', saveState)
+    */
+    
+    return bocket
+}
+
+// run in main file
+connectToWhatsApp()</code></pre>
+
+                <h2 class="mt-5">Features</h2>
+                <ul>
+                    <li>Send and receive messages</li>
+                    <li>Media messages (images, videos, documents, etc.)</li>
+                    <li>Group functionality (create, add/remove participants, etc.)</li>
+                    <li>Message forwarding, deletion, and reaction</li>
+                    <li>Persistent connection with automatic reconnection</li>
+                    <li>Properly typed in TypeScript</li>
+                </ul>
+
+                <h2 class="mt-5">Note</h2>
+                <p>This library implements the WhatsApp Web API through reverse engineering the protocol. Using it against the WhatsApp Terms of Service may result in your account being banned. Use at your own risk.</p>
+
+                <div class="mt-5 mb-4">
+                    <p>For more detailed documentation, check out the links in the sidebar.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light p-3 text-center">
+        <div class="container">
+            <p class="mb-0">Bocket &copy; 2025. A WhatsApp Web API Library.</p>
+        </div>
+    </footer>
+</body>
+</html>
