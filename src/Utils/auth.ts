@@ -78,6 +78,9 @@ export const initAuthCreds = (): AuthenticationCreds => {
         signedIdentityKey.private
     );
     
+    // Generate a random device ID
+    const deviceId = randomBytes(16).toString('hex');
+    
     return {
         noiseKey,
         signedIdentityKey,
@@ -93,7 +96,13 @@ export const initAuthCreds = (): AuthenticationCreds => {
         lastAccountSyncTimestamp: 0,
         myAppStateKeyId: undefined,
         processedHistoryMessages: [],
-        accountSettings: {}
+        accountSettings: {},
+        // Add new fields for WhatsApp Web authentication
+        deviceId,
+        clientToken: undefined,
+        serverToken: undefined,
+        encKey: undefined,
+        macKey: undefined
     };
 };
 

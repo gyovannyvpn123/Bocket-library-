@@ -221,6 +221,12 @@ export type AuthenticationCreds = {
     myAppStateKeyId?: string;
     processedHistoryMessages: any[];
     accountSettings: any;
+    // Additional fields needed for WhatsApp Web authentication
+    deviceId?: string;
+    clientToken?: string;
+    serverToken?: string;
+    encKey?: Buffer;
+    macKey?: Buffer;
 };
 
 export type KeyPair = {
@@ -250,6 +256,7 @@ export type SocketConfig = {
 export type BocketOptions = Partial<SocketConfig> & {
     auth?: AuthenticationState;
     printQRInTerminal?: boolean;
+    simulationMode?: boolean;
     // Other relevant options
 };
 
