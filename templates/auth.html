@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication - Bocket</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+        .main-content {
+            min-height: 100vh;
+        }
+        pre {
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        code {
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-dark sidebar p-0">
+                <div class="d-flex flex-column p-3 text-white">
+                    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <span class="fs-4">Bocket</span>
+                    </a>
+                    <hr>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/" class="nav-link text-white">
+                                Introduction
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/usage/" class="nav-link text-white">
+                                Usage
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/reference/" class="nav-link text-white">
+                                API Reference
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/events/" class="nav-link text-white">
+                                Events
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/types/" class="nav-link text-white">
+                                Types
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/docs/auth/" class="nav-link active">
+                                Authentication
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-9 col-lg-10 main-content p-4">
+                <h1>Authentication</h1>
+                <p class="lead">Learn how to manage authentication and session persistence in Bocket.</p>
+                
+                <div class="alert alert-info" role="alert">
+                    <strong>Note:</strong> Authentication in Bocket works by scanning a QR code with your WhatsApp mobile app, similar to how WhatsApp Web works in your browser.
+                </div>
+
+                <h2 class="mt-5">Authentication Process</h2>
+                <p>The authentication process in Bocket follows these steps:</p>
+                <ol>
+                    <li>Create a Bocket client</li>
+                    <li>Connect to WhatsApp Web servers</li>
+                    <li>Receive a QR code that needs to be scanned with your WhatsApp mobile app</li>
+                    <li>After scanning, the client is authenticated and can interact with WhatsApp</li>
+                    <li>(Optional) Save the authentication state for future sessions</li>
+                </ol>
+
+                <h2 class="mt-5">Basic Authentication</h2>
+                <p>The simplest way to authenticate is by creating a new client and printing the QR code in the terminal:</p>
+                <pre><code>import { BocketClient } from 'bocket'
+
+async function connectToWhatsApp() {
+    const bocket = new BocketClient({
+        printQRInTerminal: true
+    })
+    
+    bocket.on('connection.update', ({ connection }) => {
+        if(connection === 'open') {
+            console.log('Connected successfully!')
+        }
+    })
+    
+    await bocket.connect()
+}
+
+connectToWhatsApp()</code></pre>
+
+                <p>When you run this code, you'll see a QR code displayed in your terminal. Scan this with your WhatsApp mobile app using the "Linked Devices" feature.</p>
+
+                <h2 class="mt-5">Persistent Authentication</h2>
+                <p>To avoid having to scan the QR code every time your application restarts, you can save and reuse the authentication state.</p>
+                <p>Bocket provides the <code>useAuthState</code> utility to simplify this process:</p>
+                <pre><code>import { BocketClient } from 'bocket'
+import { useAuthState } from 'bocket/Auth'
+import * as fs from 'fs'
+
+async function connectToWhatsApp() {
+    // Load or initialize authentication state
+    const { state, saveState } = useAuthState('./auth_info.json')
+    
+    const bocket = new BocketClient({
+        printQRInTerminal: true,
+        auth: state
+    })
+    
+    // Listen for auth state updates and save them
+    bocket.on('auth-state.update', saveState)
+    
+    bocket.on('connection.update', ({ connection }) => {
+        if(connection === 'open') {
+            console.log('Connected successfully!')
+        }
+    })
+    
+    await bocket.connect()
+    
+    return bocket
+}
+
+connectToWhatsApp()</code></pre>
+
+                <p>With this implementation:</p>
+                <ul>
+                    <li>The auth state is loaded from <code>auth_info.json</code> if it exists</li>
+                    <li>When auth state changes, it's automatically saved to the file</li>
+                    <li>The next time you run the application, it will use the saved credentials and won't need to scan the QR code again</li>
+                </ul>
+
+                <h2 class="mt-5">Custom Auth State Management</h2>
+                <p>If you want to store auth data in a different way (e.g., in a database), you can create a custom implementation:</p>
+                <pre><code>import { BocketClient, AuthenticationState } from 'bocket'
+import { initAuthCreds } from 'bocket/Utils'
+
+// Example: Store auth in-memory (for demo purposes)
+let savedAuthState: AuthenticationState = {
+    creds: initAuthCreds(),
+    keys: {
+        preKeys: {},
+        sessions: {},
+        senderKeys: {},
+        appStateSyncKeys: {},
+        appStateVersions: {}
+    }
+}
+
+// You could replace this with database operations
+const saveState = (state: AuthenticationState) => {
+    savedAuthState = state
+    console.log('Auth state updated and saved')
+}
+
+const restoreState = () => {
+    return savedAuthState
+}
+
+async function connectToWhatsApp() {
+    const bocket = new BocketClient({
+        printQRInTerminal: true,
+        auth: restoreState()
+    })
+    
+    bocket.on('auth-state.update', saveState)
+    
+    await bocket.connect()
+    
+    return bocket
+}
+
+connectToWhatsApp()</code></pre>
+
+                <h2 class="mt-5">Authentication State Structure</h2>
+                <p>The authentication state consists of two main components:</p>
+                <ul>
+                    <li><strong>Credentials</strong>: Contains the keys and identifiers needed for WhatsApp encryption</li>
+                    <li><strong>Keys</strong>: Stores various Signal protocol keys used for the end-to-end encryption</li>
+                </ul>
+
+                <pre><code>interface AuthenticationState {
+    creds: AuthenticationCreds;
+    keys: SignalKeyStoreType;
+}</code></pre>
+
+                <div class="alert alert-warning mt-5" role="alert">
+                    <h4 class="alert-heading">Security Warning!</h4>
+                    <p>The authentication state file contains sensitive data that can be used to access your WhatsApp account. Keep it secure and don't share it with others.</p>
+                </div>
+
+                <h2 class="mt-5">Handling Connection Errors</h2>
+                <p>When a connection is lost, you can check the disconnect reason to determine whether to reconnect:</p>
+                <pre><code>import { BocketClient, DisconnectReason } from 'bocket'
+import { Boom } from '@hapi/boom'
+
+async function connectToWhatsApp() {
+    const bocket = new BocketClient({
+        printQRInTerminal: true
+    })
+    
+    bocket.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update
+        
+        if(connection === 'close') {
+            const shouldReconnect = (lastDisconnect.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut
+            console.log('Connection closed due to ', lastDisconnect.error, ', reconnecting ', shouldReconnect)
+            
+            if(shouldReconnect) {
+                connectToWhatsApp()
+            }
+        } else if(connection === 'open') {
+            console.log('Connected successfully!')
+        }
+    })
+    
+    await bocket.connect()
+}
+
+connectToWhatsApp()</code></pre>
+
+                <p>This code checks if the disconnect reason is <code>loggedOut</code>. If not, it attempts to reconnect.</p>
+
+                <h2 class="mt-5">Logging Out</h2>
+                <p>To log out and invalidate the session:</p>
+                <pre><code>await bocket.logout()</code></pre>
+                <p>After logging out, you'll need to scan the QR code again to re-authenticate.</p>
+
+                <div class="alert alert-info mt-5" role="alert">
+                    <h4 class="alert-heading">Multi-device Support</h4>
+                    <p>Bocket uses WhatsApp's multi-device capabilities, which means your phone doesn't need to be online after the initial QR code scan.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light p-3 text-center">
+        <div class="container">
+            <p class="mb-0">Bocket &copy; 2025. A WhatsApp Web API Library.</p>
+        </div>
+    </footer>
+</body>
+</html>
