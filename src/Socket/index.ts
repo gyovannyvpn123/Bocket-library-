@@ -1,14 +1,11 @@
 import WebSocket from 'ws';
-import { 
-    WAMessage, 
-    WAMessageContent, 
-    SendMessageOptions, 
+import {
+    WAMessage,
+    WAMessageContent,
     WAGroupMetadata,
-    WAChat,
-    WAContact
+    SendMessageOptions
 } from '../Types';
-import { prepareMessage } from '../Utils';
-import { encodeBinaryNode } from '../WABinary';
+import { generateMessageID } from '../Utils';
 
 /**
  * Send a WhatsApp message through the socket
@@ -24,35 +21,27 @@ export const sendMessage = async (
     content: WAMessageContent,
     options: SendMessageOptions = {}
 ): Promise<WAMessage> => {
-    // Prepare the message
-    const message = prepareMessage(jid, content, options);
+    // Generate a message ID if not provided
+    const messageId = options.messageId || generateMessageID();
     
-    // In a real implementation, we would:
-    // 1. Serialize the message according to WhatsApp protocol
-    // 2. Send it through the socket
-    // 3. Wait for server acknowledgment
-    // 4. Return the sent message with server info
-    
-    // For now, we'll implement a simplified version
-    const node = {
-        tag: 'action',
-        attrs: {
-            type: 'relay',
-            epoch: Date.now().toString()
+    // Create a message object
+    const message: WAMessage = {
+        key: {
+            remoteJid: jid,
+            fromMe: true,
+            id: messageId
         },
-        content: [{
-            tag: 'message',
-            attrs: {},
-            content: message
-        }]
+        message: content,
+        messageTimestamp: Math.floor(Date.now() / 1000)
     };
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
+    // In a real implementation, this would actually send the message to WhatsApp
+    // For now, we'll just simulate a successful send
     
-    // In a real implementation, we would wait for server ack
-    // For now, just return the message
+    // Simulate sending delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return the sent message
     return message;
 };
 
@@ -68,19 +57,29 @@ export const createGroup = async (
     subject: string,
     participants: string[]
 ): Promise<WAGroupMetadata> => {
-    // In a real implementation, we would:
-    // 1. Create a proper protocol message to create a group
-    // 2. Send it through the socket
-    // 3. Process the response
-    // 4. Return the group metadata
+    // In a real implementation, this would create a group through WhatsApp
+    // For now, simulate group creation
     
-    // For now, return dummy data
-    return {
-        id: `${Date.now()}@g.us`,
-        subject,
-        creation: Date.now(),
-        participants: participants.map(id => ({ id, isAdmin: false }))
+    // Generate a random group ID
+    const groupId = `${Math.floor(Math.random() * 1000000000)}@g.us`;
+    
+    // Create a group metadata object
+    const groupMetadata: WAGroupMetadata = {
+        id: groupId,
+        subject: subject,
+        creation: Math.floor(Date.now() / 1000),
+        participants: participants.map(jid => ({
+            id: jid,
+            isAdmin: false,
+            isSuperAdmin: false
+        }))
     };
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Return the group metadata
+    return groupMetadata;
 };
 
 /**
@@ -95,7 +94,9 @@ export const updateGroupSubject = async (
     jid: string,
     subject: string
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would update the group subject through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
@@ -111,7 +112,9 @@ export const updateGroupDescription = async (
     jid: string,
     description: string
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would update the group description through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
@@ -127,7 +130,9 @@ export const addGroupParticipants = async (
     jid: string,
     participants: string[]
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would add participants through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
@@ -143,7 +148,9 @@ export const removeGroupParticipants = async (
     jid: string,
     participants: string[]
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would remove participants through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
@@ -159,7 +166,9 @@ export const promoteGroupParticipants = async (
     jid: string,
     participants: string[]
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would promote participants through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
@@ -175,7 +184,9 @@ export const demoteGroupParticipants = async (
     jid: string,
     participants: string[]
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would demote participants through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
@@ -189,7 +200,9 @@ export const leaveGroup = async (
     socket: WebSocket,
     jid: string
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would leave the group through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
@@ -203,13 +216,22 @@ export const getGroupMetadata = async (
     socket: WebSocket,
     jid: string
 ): Promise<WAGroupMetadata> => {
-    // Implementation would go here
-    // For now, return dummy data
+    // In a real implementation, this would fetch group metadata from WhatsApp
+    // For now, simulate a response
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Create a dummy group metadata object
     return {
         id: jid,
-        subject: 'Group',
-        creation: Date.now(),
-        participants: []
+        subject: 'Group Name',
+        creation: Math.floor(Date.now() / 1000) - 86400, // 1 day ago
+        participants: [
+            {
+                id: '1234567890@s.whatsapp.net',
+                isAdmin: true,
+                isSuperAdmin: true
+            }
+        ]
     };
 };
 
@@ -220,9 +242,12 @@ export const getGroupMetadata = async (
  */
 export const getChats = async (
     socket: WebSocket
-): Promise<WAChat[]> => {
-    // Implementation would go here
-    // For now, return dummy data
+): Promise<any[]> => {
+    // In a real implementation, this would fetch chats from WhatsApp
+    // For now, simulate a response
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return an empty array for now
     return [];
 };
 
@@ -233,9 +258,12 @@ export const getChats = async (
  */
 export const getContacts = async (
     socket: WebSocket
-): Promise<WAContact[]> => {
-    // Implementation would go here
-    // For now, return dummy data
+): Promise<any[]> => {
+    // In a real implementation, this would fetch contacts from WhatsApp
+    // For now, simulate a response
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return an empty array for now
     return [];
 };
 
@@ -249,9 +277,12 @@ export const getProfilePicture = async (
     socket: WebSocket,
     jid: string
 ): Promise<string> => {
-    // Implementation would go here
-    // For now, return dummy data
-    return '';
+    // In a real implementation, this would fetch the profile picture URL from WhatsApp
+    // For now, simulate a response
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return a placeholder URL
+    return 'https://example.com/placeholder-profile-picture.jpg';
 };
 
 /**
@@ -264,7 +295,9 @@ export const updateProfilePicture = async (
     socket: WebSocket,
     image: Buffer
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would update the profile picture through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
@@ -278,9 +311,12 @@ export const updateStatus = async (
     socket: WebSocket,
     status: string
 ): Promise<boolean> => {
-    // Implementation would go here
+    // In a real implementation, this would update the status through WhatsApp
+    // For now, simulate success
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
 };
 
-export * from './messages';
+// Import group & message specific functions
 export * from './groups';
+export * from './messages';

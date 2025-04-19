@@ -19,7 +19,8 @@ import {
     SendImageOptions,
     SendVideoOptions,
     SendAudioOptions,
-    SendDocumentOptions
+    SendDocumentOptions,
+    Logger
 } from './Types';
 import { initAuthCreds, createDefaultLogger } from './Utils';
 import * as WABinary from './WABinary';
@@ -40,7 +41,7 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
         printQRInTerminal: false
     };
     
-    private logger: BocketOptions['logger'];
+    private logger: Logger;
     
     /**
      * Create a new BocketClient instance
@@ -112,9 +113,9 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
             
             // Set up event handlers
             this.sock.on('open', () => this.handleSocketOpen());
-            this.sock.on('message', (data) => this.handleSocketMessage(data));
+            this.sock.on('message', (data: WebSocket.Data) => this.handleSocketMessage(data));
             this.sock.on('close', () => this.handleSocketClose());
-            this.sock.on('error', (err) => this.handleSocketError(err));
+            this.sock.on('error', (err: Error) => this.handleSocketError(err));
             
             // Wait for connection to be established
             await new Promise<void>((resolve, reject) => {

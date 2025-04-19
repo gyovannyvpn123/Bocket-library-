@@ -40,6 +40,7 @@ export type WAImageMessage = {
     directPath?: string;
     mediaKeyTimestamp?: number;
     jpegThumbnail?: Buffer;
+    contextInfo?: WAContextInfo;
 };
 
 export type WAVideoMessage = {
@@ -57,6 +58,7 @@ export type WAVideoMessage = {
     mediaKeyTimestamp?: number;
     jpegThumbnail?: Buffer;
     streamingSidecar?: Buffer;
+    contextInfo?: WAContextInfo;
 };
 
 export type WAAudioMessage = {
@@ -70,6 +72,7 @@ export type WAAudioMessage = {
     fileEncSha256?: Buffer;
     directPath?: string;
     mediaKeyTimestamp?: number;
+    contextInfo?: WAContextInfo;
 };
 
 export type WADocumentMessage = {
@@ -85,6 +88,7 @@ export type WADocumentMessage = {
     directPath?: string;
     mediaKeyTimestamp?: number;
     jpegThumbnail?: Buffer;
+    contextInfo?: WAContextInfo;
 };
 
 export type WAStickerMessage = {
@@ -100,6 +104,7 @@ export type WAStickerMessage = {
     mediaKeyTimestamp?: number;
     firstFrameSidecar?: Buffer;
     isAnimated?: boolean;
+    contextInfo?: WAContextInfo;
 };
 
 export type WAExtendedTextMessage = {
