@@ -1,6 +1,5 @@
 import WebSocket from 'ws';
 import { WAGroupMetadata, WAGroupParticipant } from '../Types';
-import { encodeBinaryNode } from '../WABinary';
 
 /**
  * Parse group metadata from WhatsApp format
@@ -8,14 +7,16 @@ import { encodeBinaryNode } from '../WABinary';
  * @returns Formatted group metadata
  */
 export const parseGroupMetadata = (data: any): WAGroupMetadata => {
-    // In a real implementation, this would parse the complex WhatsApp
-    // group metadata format into our simplified WAGroupMetadata object
+    // This is a placeholder that would be implemented with actual group metadata parsing
+    // In a real implementation, we'd parse the WhatsApp data format into our WAGroupMetadata format
     
-    // For now, return a dummy object
+    // Basic conversion
     return {
         id: data.id || '',
-        subject: data.subject || '',
-        creation: data.creation || Date.now(),
+        subject: data.subject || 'Group',
+        creation: data.creation || Math.floor(Date.now() / 1000),
+        owner: data.owner,
+        desc: data.desc,
         participants: parseGroupParticipants(data.participants || [])
     };
 };
@@ -26,7 +27,12 @@ export const parseGroupMetadata = (data: any): WAGroupMetadata => {
  * @returns Formatted participants array
  */
 export const parseGroupParticipants = (data: any[]): WAGroupParticipant[] => {
-    // Parse participant data from WhatsApp format
+    // This is a placeholder that would be implemented with actual participant parsing
+    
+    if (!Array.isArray(data)) {
+        return [];
+    }
+    
     return data.map(participant => ({
         id: participant.id || '',
         isAdmin: participant.isAdmin || false,
@@ -42,26 +48,14 @@ export const parseGroupParticipants = (data: any[]): WAGroupParticipant[] => {
 export const getAllGroups = async (
     socket: WebSocket
 ): Promise<WAGroupMetadata[]> => {
-    // In a real implementation, we would:
-    // 1. Create a proper query message according to WhatsApp protocol
-    // 2. Send it through the socket
-    // 3. Process the response
-    // 4. Return the groups
+    // In a real implementation, this would fetch all groups from WhatsApp
+    // For now, we'll simulate a response with empty array
     
-    const node = {
-        tag: 'query',
-        attrs: {
-            type: 'groups',
-            epoch: Date.now().toString()
-        }
-    };
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 700));
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
-    
-    // In a real implementation, we would wait for response
-    // For now, return an empty array
+    // Return empty array
+    // In a real implementation, we'd return actual groups
     return [];
 };
 
@@ -75,33 +69,14 @@ export const createGroupInviteLink = async (
     socket: WebSocket,
     jid: string
 ): Promise<string> => {
-    // In a real implementation, we would:
-    // 1. Create a proper action message according to WhatsApp protocol
-    // 2. Send it through the socket
-    // 3. Process the response
-    // 4. Return the invite link
+    // In a real implementation, this would create an invite link through WhatsApp
     
-    const node = {
-        tag: 'action',
-        attrs: {
-            type: 'set',
-            epoch: Date.now().toString()
-        },
-        content: [{
-            tag: 'invite',
-            attrs: {
-                jid
-            }
-        }]
-    };
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
-    
-    // In a real implementation, we would wait for response
-    // For now, return a dummy link
-    return `https://chat.whatsapp.com/invite/${Date.now()}`;
+    // Return a dummy invite link
+    // In a real implementation, we'd return an actual invite link
+    return `https://chat.whatsapp.com/invite/${Math.random().toString(36).substring(2, 10)}`;
 };
 
 /**
@@ -114,34 +89,14 @@ export const revokeGroupInviteLink = async (
     socket: WebSocket,
     jid: string
 ): Promise<string> => {
-    // In a real implementation, we would:
-    // 1. Create a proper action message according to WhatsApp protocol
-    // 2. Send it through the socket
-    // 3. Process the response
-    // 4. Return the new invite link
+    // In a real implementation, this would revoke the current link and create a new one
     
-    const node = {
-        tag: 'action',
-        attrs: {
-            type: 'set',
-            epoch: Date.now().toString()
-        },
-        content: [{
-            tag: 'invite',
-            attrs: {
-                jid,
-                revoke: 'true'
-            }
-        }]
-    };
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
-    
-    // In a real implementation, we would wait for response
-    // For now, return a dummy link
-    return `https://chat.whatsapp.com/invite/${Date.now()}`;
+    // Return a new dummy invite link
+    // In a real implementation, we'd return an actual new invite link
+    return `https://chat.whatsapp.com/invite/${Math.random().toString(36).substring(2, 10)}`;
 };
 
 /**
@@ -153,35 +108,17 @@ export const revokeGroupInviteLink = async (
 export const acceptGroupInvite = async (
     socket: WebSocket,
     inviteCode: string
-): Promise<{ status: boolean; groupJid: string }> => {
-    // In a real implementation, we would:
-    // 1. Create a proper action message according to WhatsApp protocol
-    // 2. Send it through the socket
-    // 3. Process the response
+): Promise<{ status: boolean; groupJid?: string }> => {
+    // In a real implementation, this would accept an invite through WhatsApp
     
-    const node = {
-        tag: 'action',
-        attrs: {
-            type: 'set',
-            epoch: Date.now().toString()
-        },
-        content: [{
-            tag: 'invite',
-            attrs: {
-                code: inviteCode
-            }
-        }]
-    };
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
-    
-    // In a real implementation, we would wait for response
-    // For now, return dummy data
+    // Return success and a dummy group JID
+    // In a real implementation, we'd return the actual result
     return {
         status: true,
-        groupJid: `${Date.now()}@g.us`
+        groupJid: `${Math.floor(Math.random() * 1000000000)}@g.us`
     };
 };
 
@@ -194,37 +131,27 @@ export const acceptGroupInvite = async (
 export const getGroupInviteInfo = async (
     socket: WebSocket,
     inviteCode: string
-): Promise<{ id: string; subject: string; creator: string; creation: number; participants: number }> => {
-    // In a real implementation, we would:
-    // 1. Create a proper query message according to WhatsApp protocol
-    // 2. Send it through the socket
-    // 3. Process the response
+): Promise<{ 
+    status: boolean; 
+    groupName?: string; 
+    groupJid?: string;
+    size?: number;
+    creator?: string;
+    creation?: number;
+}> => {
+    // In a real implementation, this would fetch invite info through WhatsApp
     
-    const node = {
-        tag: 'query',
-        attrs: {
-            type: 'invite',
-            epoch: Date.now().toString()
-        },
-        content: [{
-            tag: 'invite',
-            attrs: {
-                code: inviteCode
-            }
-        }]
-    };
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 700));
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
-    
-    // In a real implementation, we would wait for response
-    // For now, return dummy data
+    // Return dummy invite info
+    // In a real implementation, we'd return the actual info
     return {
-        id: `${Date.now()}@g.us`,
-        subject: 'Group',
+        status: true,
+        groupName: 'Sample Group',
+        groupJid: `${Math.floor(Math.random() * 1000000000)}@g.us`,
+        size: 10,
         creator: '1234567890@s.whatsapp.net',
-        creation: Date.now(),
-        participants: 1
+        creation: Math.floor(Date.now() / 1000) - 86400 // 1 day ago
     };
 };

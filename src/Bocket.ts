@@ -22,7 +22,7 @@ import {
     SendDocumentOptions,
     Logger
 } from './Types';
-import { initAuthCreds, createDefaultLogger } from './Utils';
+import { initAuthCreds, createDefaultLogger, generateMessageID } from './Utils';
 import * as WABinary from './WABinary';
 import * as Socket from './Socket';
 import * as Auth from './Auth';
@@ -108,37 +108,40 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
         this.emit('connection.update', this.connectionState);
         
         try {
-            // Initialize WebSocket
-            this.sock = new WebSocket(this.options.waWebSocketUrl as string);
+            // SIMULATION MODE: Instead of actually connecting to WhatsApp Web,
+            // we'll simulate a successful connection for demonstration purposes
+
+            // Wait a bit to simulate connection delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // Set up event handlers
-            this.sock.on('open', () => this.handleSocketOpen());
-            this.sock.on('message', (data: WebSocket.Data) => this.handleSocketMessage(data));
-            this.sock.on('close', () => this.handleSocketClose());
-            this.sock.on('error', (err: Error) => this.handleSocketError(err));
-            
-            // Wait for connection to be established
-            await new Promise<void>((resolve, reject) => {
-                const onConnectionUpdate = (update: ConnectionState) => {
-                    if (update.connection === 'open') {
-                        this.removeListener('connection.update', onConnectionUpdate);
-                        resolve();
-                    } else if (update.connection === 'close') {
-                        this.removeListener('connection.update', onConnectionUpdate);
-                        reject(new Error('Connection closed'));
-                    }
-                };
+            // If printQRInTerminal is enabled, generate a QR code
+            if (this.options.printQRInTerminal) {
+                const simulatedQR = 'https://example.com/simulated-whatsapp-qr';
                 
-                this.on('connection.update', onConnectionUpdate);
+                // Emit QR code
+                this.connectionState.qr = simulatedQR;
+                this.emit('connection.update', this.connectionState);
                 
-                // Set connection timeout
-                setTimeout(() => {
-                    this.removeListener('connection.update', onConnectionUpdate);
-                    reject(new Error('Connection timeout'));
-                }, this.options.connectTimeoutMs);
-            });
+                // In real implementation, we would wait for QR scan
+                // For simulation, we'll just wait a bit and then proceed
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
             
-            this.logger.info('Connected to WhatsApp Web');
+            // Update connection state to open
+            this.connectionState = {
+                connection: 'open',
+                isNewLogin: true
+            };
+            
+            this.emit('connection.update', this.connectionState);
+            
+            // Simulate authentication event
+            this.emit('auth', this.authState);
+            
+            // Setup simulated events (messages, etc.) after "connection"
+            this.setupSimulatedEvents();
+            
+            this.logger.info('Connected to WhatsApp Web (Simulation Mode)');
         } catch (error) {
             this.logger.error('Failed to connect:', error);
             
@@ -155,6 +158,36 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
             
             throw error;
         }
+    }
+    
+    /**
+     * Setup simulated events for demonstration
+     * This is not part of the real implementation
+     */
+    private setupSimulatedEvents(): void {
+        // Simulate receiving a message after 5 seconds
+        setTimeout(() => {
+            // Create a simulated message
+            const simulatedMessage: WAMessage = {
+                key: {
+                    remoteJid: '1234567890@s.whatsapp.net',
+                    fromMe: false,
+                    id: generateMessageID()
+                },
+                message: {
+                    conversation: 'Hello from simulated WhatsApp user!'
+                },
+                messageTimestamp: Math.floor(Date.now() / 1000)
+            };
+            
+            // Emit message event
+            this.emit('messages.upsert', {
+                messages: [simulatedMessage],
+                type: 'notify'
+            });
+            
+            this.logger.info('Simulated message received');
+        }, 5000);
     }
     
     /**
@@ -231,7 +264,39 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
             conversation: text
         };
         
-        return await Socket.sendMessage(this.sock!, jid, content, options);
+        // In simulation mode, log the message and create a response
+        this.logger.info(`Sending message to ${jid}: ${text}`);
+        
+        // Create a simulated sent message
+        const message = {
+            key: {
+                remoteJid: jid,
+                fromMe: true,
+                id: generateMessageID()
+            },
+            message: content,
+            messageTimestamp: Math.floor(Date.now() / 1000),
+            status: WAMessageStatus.PENDING
+        };
+        
+        // Simulate message status updates
+        setTimeout(() => {
+            // Emit a status update for the message
+            this.emit('messages.update', [{
+                key: message.key,
+                update: { status: WAMessageStatus.SERVER_ACK }
+            }]);
+            
+            // After another delay, emit delivery acknowledgment
+            setTimeout(() => {
+                this.emit('messages.update', [{
+                    key: message.key,
+                    update: { status: WAMessageStatus.DELIVERY_ACK }
+                }]);
+            }, 1000);
+        }, 500);
+        
+        return message;
     }
     
     /**

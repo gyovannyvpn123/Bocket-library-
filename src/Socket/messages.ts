@@ -1,7 +1,6 @@
 import WebSocket from 'ws';
 import { WAMessage, WAMessageContent, SendMessageOptions } from '../Types';
-import { prepareMessage } from '../Utils';
-import { encodeBinaryNode } from '../WABinary';
+import { generateMessageID, prepareMessage } from '../Utils';
 
 /**
  * Parse message list from WhatsApp format
@@ -9,11 +8,25 @@ import { encodeBinaryNode } from '../WABinary';
  * @returns Formatted message array
  */
 export const parseMessageList = (data: any): WAMessage[] => {
-    // In a real implementation, this would parse the complex WhatsApp
-    // message format into our simplified WAMessage objects
+    // This is a placeholder that would be implemented with actual message parsing
+    // In a real implementation, we'd parse the WhatsApp data format into our WAMessage format
     
-    // For now, return an empty array
-    return [];
+    if (!Array.isArray(data)) {
+        return [];
+    }
+    
+    return data.map(msg => {
+        // Basic conversion 
+        return {
+            key: {
+                remoteJid: msg.key?.remoteJid || '',
+                fromMe: msg.key?.fromMe || false,
+                id: msg.key?.id || generateMessageID()
+            },
+            message: msg.message || {},
+            messageTimestamp: msg.messageTimestamp || Math.floor(Date.now() / 1000)
+        };
+    });
 };
 
 /**
@@ -28,33 +41,13 @@ export const sendReadReceipt = async (
     jid: string,
     messageIds: string[]
 ): Promise<boolean> => {
-    // In a real implementation, we would:
-    // 1. Create a proper read receipt message according to WhatsApp protocol
-    // 2. Send it through the socket
+    // In a real implementation, this would send read receipts through WebSocket
+    // For now, we'll simulate success
     
-    const node = {
-        tag: 'action',
-        attrs: {
-            type: 'set',
-            epoch: Date.now().toString()
-        },
-        content: [{
-            tag: 'read',
-            attrs: {
-                jid,
-                count: messageIds.length.toString()
-            },
-            content: messageIds.map(id => ({
-                tag: 'message',
-                attrs: { id }
-            }))
-        }]
-    };
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
-    
+    // Return success
     return true;
 };
 
@@ -70,29 +63,13 @@ export const revokeMessage = async (
     jid: string,
     messageId: string
 ): Promise<boolean> => {
-    // In a real implementation, we would:
-    // 1. Create a proper revoke message according to WhatsApp protocol
-    // 2. Send it through the socket
+    // In a real implementation, this would send message revocation through WebSocket
+    // For now, we'll simulate success
     
-    const node = {
-        tag: 'action',
-        attrs: {
-            type: 'set',
-            epoch: Date.now().toString()
-        },
-        content: [{
-            tag: 'revoke',
-            attrs: {
-                jid,
-                id: messageId
-            }
-        }]
-    };
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
-    
+    // Return success
     return true;
 };
 
@@ -107,32 +84,17 @@ export const revokeMessage = async (
 export const getConversationHistory = async (
     socket: WebSocket,
     jid: string,
-    count: number = 50,
+    count: number = 20,
     cursor?: string
 ): Promise<WAMessage[]> => {
-    // In a real implementation, we would:
-    // 1. Create a proper query message according to WhatsApp protocol
-    // 2. Send it through the socket
-    // 3. Process the response
-    // 4. Return the messages
+    // In a real implementation, this would fetch conversation history from WhatsApp
+    // For now, we'll simulate a response with dummy messages
     
-    const node = {
-        tag: 'query',
-        attrs: {
-            type: 'message',
-            jid,
-            kind: 'before',
-            count: count.toString(),
-            ...(cursor ? { cursor } : {})
-        }
-    };
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 700));
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
-    
-    // In a real implementation, we would wait for response
-    // For now, return an empty array
+    // Return empty array for now
+    // In a real implementation, we'd return actual messages
     return [];
 };
 
@@ -148,29 +110,26 @@ export const forwardMessage = async (
     message: WAMessage,
     toJid: string
 ): Promise<WAMessage> => {
-    // Create a new message content based on the original message
-    // but strip some properties that shouldn't be forwarded
+    // In a real implementation, this would forward the message through WebSocket
     
+    // Create a copy of the message content
     const content: WAMessageContent = { ...message.message };
     
-    // Add forwarding flags
-    if (content.extendedTextMessage) {
-        if (!content.extendedTextMessage.contextInfo) {
-            content.extendedTextMessage.contextInfo = {};
+    // Prepare the forwarded message
+    const forwarded = prepareMessage(toJid, content, {
+        messageId: generateMessageID(),
+        timestamp: new Date(),
+        contextInfo: {
+            isForwarded: true,
+            forwardingScore: 1
         }
-        
-        content.extendedTextMessage.contextInfo.isForwarded = true;
-        content.extendedTextMessage.contextInfo.forwardingScore = 1;
-    }
-    // Add similar logic for other message types
+    });
     
-    // Send the forwarded message
-    return await sendMessageContent(
-        socket,
-        toJid,
-        content,
-        { messageId: undefined }  // Generate a new ID
-    );
+    // Simulate sending
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return the forwarded message
+    return forwarded;
 };
 
 /**
@@ -187,28 +146,15 @@ export const sendMessageContent = async (
     content: WAMessageContent,
     options: SendMessageOptions = {}
 ): Promise<WAMessage> => {
-    // Prepare message
+    // Prepare the message with proper format and options
     const message = prepareMessage(jid, content, options);
     
-    // Create protocol node
-    const node = {
-        tag: 'action',
-        attrs: {
-            type: 'relay',
-            epoch: Date.now().toString()
-        },
-        content: [{
-            tag: 'message',
-            attrs: {},
-            content: [message]
-        }]
-    };
+    // In a real implementation, this would send the message through WebSocket
+    // For the simulation, we'll just wait a bit and return the message
     
-    // Convert to binary and send
-    const binaryNode = encodeBinaryNode(node);
-    socket.send(binaryNode);
+    // Simulate sending delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // In a real implementation, wait for ACK
-    // For now, just return the message
+    // Return the message as if it was sent
     return message;
 };

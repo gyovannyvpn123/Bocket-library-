@@ -104,7 +104,7 @@ export const createExtendedTextMessage = (
         }
     };
     
-    if (mentionedJids && mentionedJids.length > 0) {
+    if (mentionedJids && mentionedJids.length > 0 && extendedText.extendedTextMessage) {
         extendedText.extendedTextMessage.contextInfo = {
             mentionedJid: mentionedJids
         };
