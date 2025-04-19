@@ -108,40 +108,58 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
         this.emit('connection.update', this.connectionState);
         
         try {
-            // SIMULATION MODE: Instead of actually connecting to WhatsApp Web,
-            // we'll simulate a successful connection for demonstration purposes
-
-            // Wait a bit to simulate connection delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Initialize WebSocket connection to WhatsApp Web
+            this.sock = new WebSocket(this.options.waWebSocketUrl!, {
+                origin: 'https://web.whatsapp.com',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
+                }
+            });
             
-            // If printQRInTerminal is enabled, generate a QR code
-            if (this.options.printQRInTerminal) {
-                const simulatedQR = 'https://example.com/simulated-whatsapp-qr';
+            // Set up WebSocket event handlers
+            this.sock.on('open', () => this.handleSocketOpen());
+            this.sock.on('message', (data) => this.handleSocketMessage(data));
+            this.sock.on('close', () => this.handleSocketClose());
+            this.sock.on('error', (error) => this.handleSocketError(error));
+            
+            // Wait for successful connection and authentication
+            const authResult = await new Promise<boolean>((resolve, reject) => {
+                // Set a timeout for connection
+                const timeout = setTimeout(() => {
+                    reject(new Error('Connection timeout'));
+                }, this.options.connectTimeoutMs);
                 
-                // Emit QR code
-                this.connectionState.qr = simulatedQR;
-                this.emit('connection.update', this.connectionState);
+                // Set up one-time handler for successful authentication
+                const authHandler = () => {
+                    clearTimeout(timeout);
+                    resolve(true);
+                };
                 
-                // In real implementation, we would wait for QR scan
-                // For simulation, we'll just wait a bit and then proceed
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Set up one-time handler for connection error
+                const errorHandler = (err: Error) => {
+                    clearTimeout(timeout);
+                    reject(err);
+                };
+                
+                this.once('auth', authHandler);
+                this.once('connection.error', errorHandler);
+            });
+            
+            if (!authResult) {
+                throw new Error('Authentication failed');
             }
             
-            // Update connection state to open
-            this.connectionState = {
-                connection: 'open',
-                isNewLogin: true
-            };
+            // Set up keep-alive ping interval
+            setInterval(() => {
+                if (this.sock && this.sock.readyState === WebSocket.OPEN) {
+                    this.sock.ping();
+                }
+            }, this.options.keepAliveIntervalMs);
             
-            this.emit('connection.update', this.connectionState);
+            // Set up automatic reconnection
+            this.setupReconnection();
             
-            // Simulate authentication event
-            this.emit('auth', this.authState);
-            
-            // Setup simulated events (messages, etc.) after "connection"
-            this.setupSimulatedEvents();
-            
-            this.logger.info('Connected to WhatsApp Web (Simulation Mode)');
+            this.logger.info('Connected to WhatsApp Web');
         } catch (error) {
             this.logger.error('Failed to connect:', error);
             
@@ -156,8 +174,37 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
             
             this.emit('connection.update', this.connectionState);
             
+            // Close socket if it's open
+            if (this.sock) {
+                this.sock.close();
+                this.sock = null;
+            }
+            
             throw error;
         }
+    }
+    
+    /**
+     * Set up automatic reconnection
+     */
+    private setupReconnection(): void {
+        this.on('connection.update', (update) => {
+            // If connection was closed and it wasn't a logout
+            if (update.connection === 'close' && 
+                update.lastDisconnect?.error?.message !== 'Connection closed by user') {
+                
+                this.logger.info('Connection closed, attempting to reconnect...');
+                
+                // Wait a bit before reconnecting
+                setTimeout(async () => {
+                    try {
+                        await this.connect();
+                    } catch (error) {
+                        this.logger.error('Failed to reconnect:', error);
+                    }
+                }, 5000);
+            }
+        });
     }
     
     /**
