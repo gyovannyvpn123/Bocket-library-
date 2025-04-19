@@ -109,7 +109,7 @@ export class BocketClient extends EventEmitter implements BocketEventEmitter {
         
         try {
             // Check if we are in simulation mode
-            const isSimulationMode = this.options.simulationMode || true; // Force simulation mode for Replit environment
+            const isSimulationMode = this.options.simulationMode === undefined ? true : this.options.simulationMode; // Default to simulation mode if undefined
             
             if (isSimulationMode) {
                 // Simulation mode - don't attempt actual connection
